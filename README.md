@@ -1,18 +1,57 @@
-# Salesforce DX Project: Next Steps
+# Sistema de Gerenciamento de Manutenção e Inventário Salesforce
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+## Visão Geral
 
-## How Do You Plan to Deploy Your Changes?
+Este projeto Salesforce automatiza o gerenciamento de casos de manutenção e sincroniza o inventário de equipamentos com uma fonte externa. Utiliza Apex para lógica de negócio, chamadas REST assíncronas e testes automatizados para garantir a qualidade e consistência dos dados.
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+---
 
-## Configure Your Salesforce DX Project
+## Funcionalidades Principais
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+### 1. Automação de Casos de Manutenção
+- Cria automaticamente novos casos do tipo **Routine Maintenance** quando um caso do tipo **Repair** ou **Routine Maintenance** é fechado.
+- Calcula a data de vencimento (`Date_Due__c`) do novo caso com base no menor ciclo de manutenção (`Maintenance_Cycle__c`) dos itens associados ao caso fechado.
+- Clona os itens de manutenção relacionados para manter o histórico e garantir rastreabilidade do equipamento.
 
-## Read All About It
+### 2. Sincronização de Inventário via REST Callout
+- Realiza chamada REST assíncrona (via `Queueable`) para um endpoint externo que retorna dados de equipamentos em formato JSON.
+- Deserializa os dados e os converte para registros do objeto padrão **Product2**, atualizando campos customizados como ciclo de manutenção, custo, SKU, entre outros.
+- Realiza upsert utilizando o campo externo `Warehouse_SKU__c` para evitar duplicidade e manter o inventário sincronizado.
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+### 3. Testes Automatizados
+- Testa a trigger que dispara a lógica quando um caso muda para status **Closed**.
+- Valida a criação automática dos novos casos, garantindo que os campos e relações estejam corretos.
+- Confirma a lógica de agregação e consulta do menor ciclo de manutenção.
+- Garante a correta clonagem e atualização dos itens de manutenção para o novo caso.
+
+---
+
+## Estrutura do Projeto
+
+| Arquivo/Classe                  | Descrição                                                      |
+| ------------------------------ | -------------------------------------------------------------- |
+| `MaintenanceRequestHelper`      | Classe Apex responsável pela lógica de criação e atualização de casos e itens de manutenção. |
+| `MaintenanceRequestHelperTest`  | Classe de teste que cobre as funcionalidades da helper, utilizando dados reais (`seeAllData=true`). |
+| `WarehouseCalloutService`       | Classe `Queueable` que realiza callout REST para sincronização assíncrona do inventário com API externa. |
+
+---
+
+## Requisitos
+
+- Organização Salesforce com suporte a Apex e permissões para execução de chamadas REST assíncronas.
+- Endpoint externo configurado e acessível para sincronização do inventário.
+- Campos customizados criados nos objetos **Case**, **Product2** e **Equipment_Maintenance_Item__c** conforme mapeamento na classe.
+- Configuração da trigger para chamar a helper no fechamento dos casos (não fornecida, mas necessária para funcionamento automático).
+
+---
+
+## Como Implantar
+
+1. Faça o deploy das classes Apex para sua organização Salesforce via Metadata API, Salesforce CLI ou IDE de sua preferência.
+2. Confirme que os campos customizados e objetos necessários estão criados e configurados.
+3. Garanta que triggers ou processos chamem o método `MaintenanceRequestHelper.createNewCase` sempre que um caso for fechado.
+4. Para sincronizar o inventário, agende a execução da classe `WarehouseCalloutService` como um job assíncrono (pode ser manual ou via schedulable Apex).
+   
+   Exemplo para enfileirar o job manualmente via Anonymous Apex:
+   ```apex
+   System.enqueueJob(new WarehouseCalloutService());
