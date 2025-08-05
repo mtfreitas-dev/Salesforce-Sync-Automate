@@ -55,3 +55,27 @@ Este projeto Salesforce automatiza o gerenciamento de casos de manutenção e si
    Exemplo para enfileirar o job manualmente via Anonymous Apex:
    ```apex
    System.enqueueJob(new WarehouseCalloutService());
+   ```
+---
+
+## Campos Customizados Utilizados (exemplos) 
+
+| Objeto                      | Campo                      | Descrição                          |
+| --------------------------- | -------------------------- | --------------------------------- |
+| Case                        | Vehicle__c                 | Referência ao veículo             |
+| Case                        | Product__c                 | Produto relacionado               |
+| Case                        | Date_Reported__c           | Data de registro do caso          |
+| Case                        | Date_Due__c                | Data de vencimento do SLA         |
+| Product2                    | Maintenance_Cycle__c       | Ciclo de manutenção em dias       |
+| Product2                    | Lifespan_Months__c         | Vida útil do equipamento (meses) |
+| Product2                    | Warehouse_SKU__c           | Código SKU para inventário        |
+| Product2                    | Replacement_Part__c        | Indica se é peça de reposição     |
+| Equipment_Maintenance_Item__c | Maintenance_Request__c    | Lookup para o caso de manutenção  |
+
+
+
+---
+
+## Considerações Finais
+Este sistema permite uma gestão mais eficiente dos casos de manutenção e do inventário de equipamentos, reduzindo retrabalho e erros de sincronização. A arquitetura baseada em Apex assíncrono garante desempenho e escalabilidade, enquanto os testes automatizados aumentam a confiabilidade do código.
+   
