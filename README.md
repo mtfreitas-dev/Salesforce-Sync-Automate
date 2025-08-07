@@ -64,7 +64,7 @@ Este projeto Salesforce automatiza o gerenciamento de casos de manutenção e si
 
 ## Campos Customizados Utilizados (exemplos) 
 
-| 🧩 Objeto                  | 🏷️ Campo                   | 📝 Descriçã                       |
+| 🧩 Objeto                  | 🏷️ Campo                   | 📝 Descriçã                      |
 | --------------------------- | -------------------------- | --------------------------------- |
 | Case                        | Vehicle__c                 | Referência ao veículo             |
 | Case                        | Product__c                 | Produto relacionado               |
